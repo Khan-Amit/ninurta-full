@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="manifest" href="manifest.json">
-    <title>Ninurta‑Full · Mine & Transfer</title>
+    <title>Ninurta‑Full · Bank + Crypto + Mining</title>
     <style>
         body {
             background: #0a0f1e;
@@ -26,6 +26,17 @@
             border: 1px solid #2d3a5e;
         }
         h1, h2 { text-align: center; color: white; margin: 0 0 8px; }
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 40px;
+            border: none;
+            font-size: 1rem;
+        }
+        input, select { background: #010a1a; border: 1px solid #2f4172; color: #ffdd99; }
+        button { background: #3b6ea0; color: white; font-weight: bold; cursor: pointer; }
+        .hidden { display: none; }
         .tabs {
             display: flex;
             gap: 8px;
@@ -52,34 +63,62 @@
             margin: 16px 0;
         }
         .balance .amount { font-size: 2rem; font-weight: bold; color: #ffdd99; }
-        input, select, button {
-            width: 100%;
+        .bank-card {
+            background: #00000044;
+            border-radius: 28px;
             padding: 12px;
-            margin: 8px 0;
-            border-radius: 40px;
-            border: none;
-            font-size: 1rem;
+            margin: 12px 0;
         }
-        input, select { background: #010a1a; border: 1px solid #2f4172; color: #ffdd99; }
-        button { background: #3b6ea0; color: white; font-weight: bold; cursor: pointer; }
-        .mining-stats { background: #00000044; border-radius: 28px; padding: 12px; margin: 16px 0; text-align: center; }
         .footer { font-size: 0.65rem; text-align: center; color: #5b6b8e; margin-top: 20px; }
-        #status { color: #88aaff; text-align: center; margin-top: 12px; }
+        .status { color: #88aaff; text-align: center; margin-top: 12px; }
     </style>
 </head>
 <body>
-<div class="card">
+
+<!-- LOGIN / REGISTER SCREEN -->
+<div class="card" id="loginDiv">
     <h1>⚡ NINURTA‑FULL</h1>
+    <h2>🔐 Login or Register</h2>
+    <input type="tel" id="phone" placeholder="Phone Number" value="">
+    <input type="text" id="fullName" placeholder="Full Name" value="">
+    <input type="password" id="password" placeholder="Password" value="">
+    <button id="loginBtn">Login / Register</button>
+    <div class="footer">Your data stays on this device</div>
+</div>
+
+<!-- BANK CONNECTION SCREEN (First time or add bank) -->
+<div class="card hidden" id="bankDiv">
+    <h2>🏦 Connect Bank Account</h2>
+    <input type="text" id="bankName" placeholder="Bank Name (e.g., SBI, KBank)">
+    <input type="text" id="accountNumber" placeholder="Account Number">
+    <input type="text" id="accountName" placeholder="Account Holder Name">
+    <button id="saveBankBtn">Save Bank Account</button>
+    <button id="skipBankBtn" class="small" style="background:#6b8cae;">Skip for now</button>
+</div>
+
+<!-- MAIN APP -->
+<div class="card hidden" id="appDiv">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1>⚡ NINURTA</h1>
+        <button id="logoutBtn" style="width: auto; padding: 8px 16px;">🔒 Logout</button>
+    </div>
     <div class="balance">
         <div class="amount" id="balance">1,250.00</div>
         <div id="balanceCurrency">USD</div>
+    </div>
+
+    <!-- Bank Account Display -->
+    <div class="bank-card" id="bankInfoDisplay">
+        <div>🏦 <span id="displayBankName">No bank connected</span></div>
+        <div>📄 <span id="displayAccountNumber"></span></div>
+        <div>👤 <span id="displayAccountName"></span></div>
+        <button id="editBankBtn" style="background: #2d4a6e; margin-top: 8px;">✏️ Edit Bank</button>
     </div>
 
     <!-- Tabs -->
     <div class="tabs">
         <button class="tab-btn active" data-tab="send">📤 Send</button>
         <button class="tab-btn" data-tab="receive">📥 Receive</button>
-        <button class="tab-btn" data-tab="crypto">₿ Crypto</button>
         <button class="tab-btn" data-tab="mining">⛏️ Mining</button>
     </div>
 
@@ -90,37 +129,28 @@
             <option value="CNY">💴 CNY</option><option value="THB">฿ THB</option>
             <option value="BDT">৳ BDT</option><option value="INR">₹ INR</option>
         </select>
-        <input type="text" id="recipient" placeholder="Recipient ID / Phone / Email">
+        <input type="text" id="recipientPhone" placeholder="Recipient Phone Number">
+        <input type="text" id="recipientName" placeholder="Recipient Name">
         <input type="number" id="amount" placeholder="Amount">
         <button id="sendBtn">✈️ Send Payment</button>
-        <div id="sendStatus"></div>
+        <div class="status" id="sendStatus"></div>
     </div>
 
     <!-- Receive Tab -->
     <div id="receivePane" class="tab-pane">
-        <div style="text-align:center; padding:20px;">
-            <div style="font-size:1.2rem;">Your CSFS ID</div>
-            <div style="background:#010a1a; padding:12px; border-radius:40px; margin:12px 0;">ninurta@csfs.net</div>
-            <button id="copyIdBtn">📋 Copy ID</button>
+        <div class="bank-card" style="text-align:center;">
+            <div>📱 Your Phone: <strong id="userPhone"></strong></div>
+            <div>👤 Your Name: <strong id="userName"></strong></div>
+            <div>🏦 Bank: <strong id="userBankName"></strong></div>
+            <div>📄 Account: <strong id="userAccountNumber"></strong></div>
+            <button id="copyBankDetailsBtn">📋 Copy Bank Details</button>
         </div>
-    </div>
-
-    <!-- Crypto Tab -->
-    <div id="cryptoPane" class="tab-pane">
-        <select id="cryptoType">
-            <option value="BTC">Bitcoin (BTC)</option>
-            <option value="ETH">Ethereum (ETH)</option>
-            <option value="CSFS">CSFS Coin</option>
-        </select>
-        <input type="text" id="cryptoAddress" placeholder="Recipient wallet address">
-        <input type="number" id="cryptoAmount" placeholder="Amount">
-        <button id="cryptoSendBtn">₿ Send Crypto</button>
-        <div id="cryptoStatus"></div>
+        <div class="status" id="receiveStatus"></div>
     </div>
 
     <!-- Mining Tab -->
     <div id="miningPane" class="tab-pane">
-        <div class="mining-stats">
+        <div class="bank-card">
             <div>⛏️ Hashrate: <strong id="hashrate">0</strong> slices/min</div>
             <div>💰 Mined today: <strong id="minedToday">0.0000</strong> CSFS</div>
         </div>
@@ -129,12 +159,17 @@
         <div id="miningHistory" style="margin-top:16px; font-size:0.7rem; background:#00000044; border-radius:28px; padding:12px; max-height:150px; overflow-y:auto;"></div>
     </div>
 
-    <div class="footer">🔐 PIN protected · Multi‑currency · Mine CSFS · No SWIFT</div>
+    <div class="footer">🔐 Bank connected · Mine CSFS · No SWIFT</div>
 </div>
 
 <script>
-    // ========== DATA ==========
-    let balanceUSD = 1250;
+    // ========== STORAGE KEYS ==========
+    const STORAGE_USER = 'ninurta_user';
+    const STORAGE_BANK = 'ninurta_bank';
+    const STORAGE_BALANCE = 'ninurta_balance';
+
+    // ========== GLOBAL VARIABLES ==========
+    let balanceUSD = parseFloat(localStorage.getItem(STORAGE_BALANCE)) || 1250;
     let currentCurrency = 'USD';
     const rates = { USD:1, EUR:0.92, CNY:7.22, THB:36.5, BDT:109.5, INR:83.2 };
     let miningInterval = null;
@@ -142,111 +177,184 @@
     let minedToday = 0;
 
     // ========== DOM ELEMENTS ==========
-    const balanceEl = document.getElementById('balance');
-    const sendStatus = document.getElementById('sendStatus');
-    const cryptoStatus = document.getElementById('cryptoStatus');
-    const miningHistory = document.getElementById('miningHistory');
-    const hashrateEl = document.getElementById('hashrate');
-    const minedTodayEl = document.getElementById('minedToday');
-
     function updateBalanceDisplay() {
         const converted = (balanceUSD * rates[currentCurrency]).toFixed(2);
-        balanceEl.innerText = converted;
+        document.getElementById('balance').innerText = converted;
     }
 
-    // ========== TABS ==========
-    const btns = document.querySelectorAll('.tab-btn');
-    const panes = {
-        send: document.getElementById('sendPane'),
-        receive: document.getElementById('receivePane'),
-        crypto: document.getElementById('cryptoPane'),
-        mining: document.getElementById('miningPane')
-    };
-    btns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const tab = btn.getAttribute('data-tab');
-            btns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            Object.values(panes).forEach(p => p.classList.remove('active'));
-            if (panes[tab]) panes[tab].classList.add('active');
-        });
+    function saveBalance() { localStorage.setItem(STORAGE_BALANCE, balanceUSD); }
+
+    // ========== LOGIN / REGISTER ==========
+    function showScreen(id) {
+        document.getElementById('loginDiv').classList.add('hidden');
+        document.getElementById('bankDiv').classList.add('hidden');
+        document.getElementById('appDiv').classList.add('hidden');
+        document.getElementById(id).classList.remove('hidden');
+    }
+
+    const loginBtn = document.getElementById('loginBtn');
+    loginBtn.addEventListener('click', () => {
+        const phone = document.getElementById('phone').value.trim();
+        const name = document.getElementById('fullName').value.trim();
+        const password = document.getElementById('password').value;
+        if (!phone || !name || !password) { alert('Phone, Name, and Password required'); return; }
+        const userData = { phone, name, password };
+        localStorage.setItem(STORAGE_USER, JSON.stringify(userData));
+        
+        // Check if bank details exist
+        const bankData = localStorage.getItem(STORAGE_BANK);
+        if (!bankData) {
+            showScreen('bankDiv');
+        } else {
+            loadBankDisplay();
+            loadApp();
+            showScreen('appDiv');
+        }
     });
 
-    // ========== SEND ==========
-    document.getElementById('sendBtn').addEventListener('click', () => {
-        const recipient = document.getElementById('recipient').value;
+    // ========== BANK CONNECTION ==========
+    function saveBankDetails() {
+        const bankName = document.getElementById('bankName').value.trim();
+        const accountNumber = document.getElementById('accountNumber').value.trim();
+        const accountName = document.getElementById('accountName').value.trim();
+        if (!bankName || !accountNumber || !accountName) { alert('Please fill all bank fields'); return; }
+        const bankData = { bankName, accountNumber, accountName };
+        localStorage.setItem(STORAGE_BANK, JSON.stringify(bankData));
+        loadBankDisplay();
+        loadApp();
+        showScreen('appDiv');
+    }
+
+    function loadBankDisplay() {
+        const bankData = JSON.parse(localStorage.getItem(STORAGE_BANK) || '{}');
+        document.getElementById('displayBankName').innerText = bankData.bankName || 'No bank';
+        document.getElementById('displayAccountNumber').innerText = bankData.accountNumber || '';
+        document.getElementById('displayAccountName').innerText = bankData.accountName || '';
+        
+        // Receive tab display
+        const user = JSON.parse(localStorage.getItem(STORAGE_USER) || '{}');
+        document.getElementById('userPhone').innerText = user.phone || '';
+        document.getElementById('userName').innerText = user.name || '';
+        document.getElementById('userBankName').innerText = bankData.bankName || '';
+        document.getElementById('userAccountNumber').innerText = bankData.accountNumber || '';
+    }
+
+    function loadApp() {
+        updateBalanceDisplay();
+        const user = JSON.parse(localStorage.getItem(STORAGE_USER) || '{}');
+        document.getElementById('userPhone').innerText = user.phone;
+        document.getElementById('userName').innerText = user.name;
+        loadBankDisplay();
+    }
+
+    document.getElementById('saveBankBtn')?.addEventListener('click', saveBankDetails);
+    document.getElementById('skipBankBtn')?.addEventListener('click', () => {
+        showScreen('appDiv');
+        loadApp();
+    });
+    document.getElementById('editBankBtn')?.addEventListener('click', () => {
+        showScreen('bankDiv');
+        // Pre-populate existing bank details
+        const bank = JSON.parse(localStorage.getItem(STORAGE_BANK) || '{}');
+        document.getElementById('bankName').value = bank.bankName || '';
+        document.getElementById('accountNumber').value = bank.accountNumber || '';
+        document.getElementById('accountName').value = bank.accountName || '';
+    });
+    document.getElementById('copyBankDetailsBtn')?.addEventListener('click', () => {
+        const user = JSON.parse(localStorage.getItem(STORAGE_USER) || '{}');
+        const bank = JSON.parse(localStorage.getItem(STORAGE_BANK) || '{}');
+        const text = `Phone: ${user.phone}\nName: ${user.name}\nBank: ${bank.bankName}\nAccount: ${bank.accountNumber}`;
+        navigator.clipboard.writeText(text);
+        alert('Bank details copied');
+    });
+
+    // ========== SEND MONEY ==========
+    document.getElementById('sendBtn')?.addEventListener('click', () => {
+        const recipientPhone = document.getElementById('recipientPhone').value;
+        const recipientName = document.getElementById('recipientName').value;
         let amount = parseFloat(document.getElementById('amount').value);
-        if (!recipient || isNaN(amount)) { sendStatus.innerText = '❌ Enter recipient and amount'; return; }
+        if (!recipientPhone || !recipientName || isNaN(amount)) {
+            document.getElementById('sendStatus').innerText = '❌ Enter recipient phone, name, and amount';
+            return;
+        }
         const amountUSD = amount / rates[currentCurrency];
-        if (amountUSD > balanceUSD) { sendStatus.innerText = '❌ Insufficient balance'; return; }
+        if (amountUSD > balanceUSD) {
+            document.getElementById('sendStatus').innerText = '❌ Insufficient balance';
+            return;
+        }
         balanceUSD -= amountUSD;
+        saveBalance();
         updateBalanceDisplay();
-        sendStatus.innerText = `✅ Sent ${amount} ${currentCurrency} to ${recipient}`;
-        setTimeout(() => sendStatus.innerText = '', 3000);
+        document.getElementById('sendStatus').innerText = `✅ Sent ${amount} ${currentCurrency} to ${recipientName} (${recipientPhone})`;
+        setTimeout(() => document.getElementById('sendStatus').innerText = '', 3000);
         document.getElementById('amount').value = '';
-        document.getElementById('recipient').value = '';
-    });
-
-    // ========== RECEIVE ==========
-    document.getElementById('copyIdBtn')?.addEventListener('click', () => {
-        navigator.clipboard.writeText('ninurta@csfs.net');
-        alert('CSFS ID copied');
-    });
-
-    // ========== CRYPTO ==========
-    document.getElementById('cryptoSendBtn').addEventListener('click', () => {
-        const type = document.getElementById('cryptoType').value;
-        const addr = document.getElementById('cryptoAddress').value;
-        const amount = parseFloat(document.getElementById('cryptoAmount').value);
-        if (!addr || isNaN(amount)) { cryptoStatus.innerText = '❌ Enter address and amount'; return; }
-        if (amount > balanceUSD) { cryptoStatus.innerText = '❌ Insufficient balance'; return; }
-        balanceUSD -= amount;
-        updateBalanceDisplay();
-        cryptoStatus.innerText = `✅ Sent ${amount} ${type} to ${addr.substring(0,8)}...`;
-        setTimeout(() => cryptoStatus.innerText = '', 3000);
-        document.getElementById('cryptoAddress').value = '';
-        document.getElementById('cryptoAmount').value = '';
+        document.getElementById('recipientPhone').value = '';
+        document.getElementById('recipientName').value = '';
     });
 
     // ========== MINING ==========
     function addMiningEntry(text) {
+        const history = document.getElementById('miningHistory');
         const entry = document.createElement('div');
         entry.innerText = text;
-        miningHistory.insertBefore(entry, miningHistory.firstChild);
-        if (miningHistory.children.length > 20) miningHistory.removeChild(miningHistory.lastChild);
+        history.insertBefore(entry, history.firstChild);
+        if (history.children.length > 20) history.removeChild(history.lastChild);
     }
-
     function mineSlice() {
         const coherence = Math.random();
         if (coherence > 0.7) {
             const reward = coherence * 0.005;
             minedToday += reward;
             balanceUSD += reward;
+            saveBalance();
             updateBalanceDisplay();
             addMiningEntry(`⛏️ Mined ${reward.toFixed(4)} CSFS (coherence ${coherence.toFixed(2)})`);
-            minedTodayEl.innerText = minedToday.toFixed(4);
+            document.getElementById('minedToday').innerText = minedToday.toFixed(4);
         }
         hashrate = Math.min(15, hashrate * 0.95 + (Math.random() * 0.5));
-        hashrateEl.innerText = hashrate.toFixed(2);
+        document.getElementById('hashrate').innerText = hashrate.toFixed(2);
     }
-
-    document.getElementById('startMiningBtn').addEventListener('click', () => {
+    document.getElementById('startMiningBtn')?.addEventListener('click', () => {
         if (miningInterval) clearInterval(miningInterval);
         miningInterval = setInterval(mineSlice, 5000);
         addMiningEntry('▶️ Mining started');
     });
-    document.getElementById('stopMiningBtn').addEventListener('click', () => {
+    document.getElementById('stopMiningBtn')?.addEventListener('click', () => {
         if (miningInterval) { clearInterval(miningInterval); miningInterval = null; }
         addMiningEntry('⏹️ Mining stopped');
     });
 
-    // ========== CURRENCY ==========
-    document.getElementById('currency').addEventListener('change', (e) => {
+    // ========== CURRENCY & TABS ==========
+    document.getElementById('currency')?.addEventListener('change', (e) => {
         currentCurrency = e.target.value;
         updateBalanceDisplay();
     });
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tab = btn.getAttribute('data-tab');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            document.getElementById(`${tab}Pane`).classList.add('active');
+        });
+    });
 
-    updateBalanceDisplay();
+    document.getElementById('logoutBtn')?.addEventListener('click', () => {
+        if (miningInterval) clearInterval(miningInterval);
+        showScreen('loginDiv');
+        document.getElementById('phone').value = '';
+        document.getElementById('fullName').value = '';
+        document.getElementById('password').value = '';
+    });
+
+    // ========== CHECK IF USER ALREADY LOGGED IN (optional: auto-load) ==========
+    const existingUser = localStorage.getItem(STORAGE_USER);
+    if (existingUser) {
+        const user = JSON.parse(existingUser);
+        document.getElementById('phone').value = user.phone;
+        document.getElementById('fullName').value = user.name;
+        // Don't auto-login; let user click Login (safer)
+    }
 </script>
 </body>
 </html>
